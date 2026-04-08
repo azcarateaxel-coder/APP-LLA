@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bloque LLA — Concejo Deliberante La Plata</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Outfit',system-ui,sans-serif;background:#f5f4f7;min-height:100vh;color:#1a0533}
+.app{display:flex;flex-direction:column;min-height:100vh}
+
+/* TOPBAR */
+.topbar{background:#1a0533;color:white;display:flex;align-items:center;gap:14px;padding:0 28px;height:58px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(26,5,51,0.18)}
+.logo-box{width:38px;height:38px;background:white;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0}
+.logo-box-text{font-size:12px;font-weight:700;color:#6B21A8;line-height:1;margin-top:2px}
+.logo-bar{width:26px;height:3px;background:#E8A000;border-radius:2px;margin-top:3px}
+.logo-text{font-size:15px;font-weight:600;color:white;line-height:1.2}
+.logo-sub{font-size:10px;font-weight:300;opacity:0.65;letter-spacing:0.05em;text-transform:uppercase}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.session-badge{background:rgba(255,255,255,0.11);border:0.5px solid rgba(255,255,255,0.18);padding:5px 13px;border-radius:20px;font-size:11px;color:rgba(255,255,255,0.82)}
+.alert-count-top{background:#E24B4A;color:white;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:600;display:none}
+
+/* NAV TABS */
+.nav-tabs{background:white;border-bottom:0.5px solid #e0dce8;display:flex;gap:0;padding:0 28px;position:sticky;top:58px;z-index:90}
+.nav-tab{font-size:13px;font-weight:500;color:#888;padding:14px 18px;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s;white-space:nowrap}
+.nav-tab:hover{color:#6B21A8}
+.nav-tab.active{color:#6B21A8;border-bottom-color:#6B21A8}
+
+/* CONTENT */
+.content{flex:1;padding:24px 28px;max-width:1240px;width:100%;margin:0 auto}
+
+/* BREADCRUMB */
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:12px;color:#888;margin-bottom:18px;flex-wrap:wrap}
+.bc-link{cursor:pointer;color:#6B21A8;font-weight:500}
+.bc-link:hover{text-decoration:underline}
+.bc-sep{opacity:0.4}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:22px}
+.stat-card{background:white;border:0.5px solid #e0dce8;border-radius:12px;padding:18px;text-align:center;transition:box-shadow 0.15s}
+.stat-card:hover{box-shadow:0 4px 16px rgba(107,33,168,0.08)}
+.stat-num{font-size:30px;font-weight:700;color:#6B21A8}
+.stat-num.red{color:#E24B4A}
+.stat-num.green{color:#3B6D11}
+.stat-lbl{font-size:11px;color:#888;margin-top:3px;text-transform:uppercase;letter-spacing:0.06em}
+
+/* SECTION LABEL */
+.section-label{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px}
+.section-title2{font-size:19px;font-weight:700;color:#1a0533}
+.section-meta{font-size:13px;color:#888;margin-top:2px}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px}
+
+/* CARDS */
+.card{background:white;border:0.5px solid #e0dce8;border-radius:14px;padding:20px}
+.card-title{font-size:13px;font-weight:600;color:#1a0533;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.card-title span{font-size:16px}
+
+/* GRID LAYOUTS */
+.grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:16px}
+.grid-1-2{display:grid;grid-template-columns:1fr 2fr;gap:16px;margin-bottom:16px}
+.grid-2-1{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px}
+
+/* BANNER */
+.banner-alert{background:#FCEBEB;border:0.5px solid #F09595;border-radius:12px;padding:13px 18px;margin-bottom:18px;display:none;align-items:center;gap:10px;font-size:13px;color:#A32D2D;font-weight:500}
+.banner-alert.show{display:flex}
+
+/* BLOQUE CARD */
+.bloque-card{background:white;border:0.5px solid #e0dce8;border-radius:14px;padding:22px 24px;cursor:pointer;transition:border-color 0.15s,transform 0.12s,box-shadow 0.15s;display:flex;align-items:center;gap:18px;max-width:500px;margin-bottom:20px}
+.bloque-card:hover{border-color:#6B21A8;transform:translateY(-2px);box-shadow:0 6px 20px rgba(107,33,168,0.1)}
+.bloque-icon{width:54px;height:54px;background:#1a0533;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0}
+.bloque-icon-text{font-size:13px;font-weight:700;color:white}
+.bloque-icon-bar{width:32px;height:3px;background:#E8A000;border-radius:2px;margin-top:4px}
+.bloque-name{font-size:17px;font-weight:700;color:#1a0533}
+.bloque-meta{font-size:13px;color:#888;margin-top:3px}
+.bloque-arrow{margin-left:auto;color:#aaa;font-size:22px}
+
+/* IMPORT */
+.import-bar{background:white;border:0.5px solid #e0dce8;border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:20px}
+.import-label{font-size:14px;font-weight:600;color:#1a0533}
+.import-sub{font-size:11px;color:#888;margin-top:2px}
+.import-btn{font-size:13px;padding:8px 16px;background:#6B21A8;color:white;border:none;border-radius:8px;cursor:pointer;font-family:'Outfit',sans-serif;display:flex;align-items:center;gap:7px;white-space:nowrap;font-weight:500;transition:background 0.15s}
+.import-btn:hover{background:#534AB7}
+.import-file{display:none}
+
+/* FUNNEL */
+.funnel-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.funnel-label{font-size:12px;color:#555;width:100px;flex-shrink:0;font-weight:500}
+.funnel-bar-wrap{flex:1;background:#f0edf5;border-radius:6px;height:26px;overflow:hidden;position:relative}
+.funnel-bar{height:100%;border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;transition:width 0.6s ease;min-width:30px}
+.funnel-bar span{font-size:11px;font-weight:700;color:white}
+.funnel-count{font-size:12px;color:#888;width:36px;text-align:right;flex-shrink:0}
+
+/* RANKING */
+.ranking-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid #f0edf5}
+.ranking-row:last-child{border-bottom:none}
+.rank-num{font-size:13px;font-weight:700;color:#6B21A8;width:20px;flex-shrink:0}
+.rank-avatar{width:32px;height:32px;border-radius:50%;background:#1a0533;color:white;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.rank-name{font-size:13px;font-weight:600;color:#1a0533;flex:1}
+.rank-bar-wrap{width:90px;background:#f0edf5;border-radius:4px;height:6px}
+.rank-bar{height:6px;border-radius:4px;background:#6B21A8}
+.rank-pct{font-size:11px;font-weight:700;color:#6B21A8;width:36px;text-align:right}
+.rank-count{font-size:11px;color:#888;width:50px;text-align:right}
+
+/* ALERT LIST */
+.alert-proj-row{display:flex;align-items:flex-start;gap:10px;padding:11px 0;border-bottom:0.5px solid #f0edf5}
+.alert-proj-row:last-child{border-bottom:none}
+.alert-dot{width:8px;height:8px;border-radius:50%;background:#E24B4A;flex-shrink:0;margin-top:4px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+.alert-proj-name{font-size:12px;color:#1a0533;line-height:1.4;flex:1}
+.alert-proj-meta{font-size:11px;color:#A32D2D;font-weight:600;white-space:nowrap}
+
+/* PROXIMAS */
+.warn-proj-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:0.5px solid #f0edf5}
+.warn-proj-row:last-child{border-bottom:none}
+.warn-dot{width:8px;height:8px;border-radius:50%;background:#E8A000;flex-shrink:0;margin-top:4px}
+.warn-proj-name{font-size:12px;color:#1a0533;line-height:1.4;flex:1}
+.warn-proj-meta{font-size:11px;color:#854F0B;font-weight:600;white-space:nowrap}
+
+/* CATEGORIA PENDIENTE */
+.cat-pend-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid #f0edf5}
+.cat-pend-row:last-child{border-bottom:none}
+.cat-pend-icon{font-size:16px;width:24px;text-align:center}
+.cat-pend-name{font-size:12px;color:#1a0533;flex:1;font-weight:500;line-height:1.3}
+.cat-pend-bar-wrap{width:70px;background:#f0edf5;border-radius:4px;height:5px}
+.cat-pend-bar{height:5px;border-radius:4px;background:#6B21A8}
+.cat-pend-count{font-size:12px;color:#888;width:30px;text-align:right}
+
+/* ACTIVIDAD */
+.act-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:0.5px solid #f0edf5}
+.act-row:last-child{border-bottom:none}
+.act-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.act-text{font-size:12px;color:#1a0533;flex:1;line-height:1.4}
+.act-time{font-size:11px;color:#aaa;white-space:nowrap}
+
+/* PILLS */
+.pill{font-size:10px;font-weight:600;padding:3px 8px;border-radius:10px}
+.p-obras{background:#E6F1FB;color:#185FA5}
+.p-seg{background:#FCEBEB;color:#A32D2D}
+.p-leg{background:#FAEEDA;color:#854F0B}
+.p-cult{background:#FBEAF0;color:#993556}
+.p-amb{background:#EAF3DE;color:#3B6D11}
+.p-sal{background:#E1F5EE;color:#0F6E56}
+.p-hac{background:#EEEDFE;color:#3C3489}
+.p-plan{background:#FAECE7;color:#993C1D}
+.p-apr{background:#E5E3D8;color:#4a4840}
+.p-transp{background:#EEEDFE;color:#3C3489}
+
+/* CONSEJALES VIEW */
+.concejales-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.consejal-card{background:white;border:0.5px solid #e0dce8;border-radius:14px;padding:20px;cursor:pointer;transition:border-color 0.15s,transform 0.12s,box-shadow 0.15s}
+.consejal-card:hover{border-color:#6B21A8;transform:translateY(-2px);box-shadow:0 6px 20px rgba(107,33,168,0.1)}
+.avatar{width:48px;height:48px;border-radius:50%;background:#1a0533;color:white;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.consejal-name{font-size:14px;font-weight:600;color:#1a0533}
+.consejal-count{font-size:12px;color:#888;margin-top:3px}
+.pills-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:10px}
+
+/* CATEGORIAS */
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:13px}
+.cat-card{background:white;border:0.5px solid #e0dce8;border-radius:14px;padding:18px;cursor:pointer;transition:border-color 0.15s,transform 0.12s,box-shadow 0.15s}
+.cat-card:hover{border-color:#6B21A8;transform:translateY(-2px);box-shadow:0 6px 20px rgba(107,33,168,0.1)}
+.cat-icon{font-size:22px;margin-bottom:8px}
+.cat-name{font-size:14px;font-weight:600;color:#1a0533}
+.cat-count{font-size:12px;color:#888;margin-top:3px}
+.cat-bar{height:4px;border-radius:2px;background:#f0edf5;margin-top:10px}
+.cat-bar-fill{height:4px;border-radius:2px;background:#6B21A8}
+
+/* DET HEADER */
+.det-header{background:white;border:0.5px solid #e0dce8;border-radius:14px;padding:22px;display:flex;align-items:center;gap:16px;margin-bottom:22px}
+.det-avatar{width:54px;height:54px;border-radius:50%;background:#1a0533;color:white;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.det-name{font-size:19px;font-weight:700;color:#1a0533}
+.det-sub{font-size:13px;color:#888;margin-top:3px}
+
+/* PROYECTOS */
+.filter-row{display:flex;align-items:center;gap:7px;margin-bottom:16px;flex-wrap:wrap}
+.filter-btn{font-size:12px;padding:5px 13px;border-radius:20px;border:0.5px solid #d0ccd8;background:white;cursor:pointer;color:#666;font-family:'Outfit',sans-serif;transition:all 0.15s}
+.filter-btn:hover{border-color:#6B21A8;color:#6B21A8}
+.filter-btn.active{background:#6B21A8;color:white;border-color:#6B21A8}
+.proj-list{display:flex;flex-direction:column;gap:11px}
+.proj-item{background:white;border:0.5px solid #e0dce8;border-radius:14px;padding:18px;border-left:4px solid #6B21A8;transition:box-shadow 0.15s}
+.proj-item:hover{box-shadow:0 4px 16px rgba(107,33,168,0.08)}
+.proj-item.alert-active{border-left-color:#E24B4A}
+.proj-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.proj-num{font-size:11px;color:#888;background:#f5f4f7;border:0.5px solid #e0dce8;padding:3px 9px;border-radius:5px;font-weight:500}
+.proj-tipo{font-size:11px;font-weight:600;padding:3px 9px;border-radius:5px}
+.tipo-ord{background:#EEEDFE;color:#3C3489}
+.tipo-dec{background:#E6F1FB;color:#185FA5}
+.tipo-res{background:#EAF3DE;color:#3B6D11}
+.proj-title{font-size:13px;color:#1a0533;line-height:1.55;margin-bottom:10px}
+.proj-footer{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.status-select{font-size:11px;padding:4px 8px;border:0.5px solid #d0ccd8;border-radius:7px;background:white;color:#1a0533;font-family:'Outfit',sans-serif;cursor:pointer;outline:none}
+.days-badge{font-size:11px;padding:3px 9px;border-radius:10px;font-weight:500}
+.days-ok{background:#EAF3DE;color:#3B6D11}
+.days-warn{background:#FAEEDA;color:#854F0B}
+.days-alert{background:#FCEBEB;color:#A32D2D;font-weight:600}
+.note-btn{font-size:11px;padding:3px 10px;border-radius:10px;border:0.5px solid #d0ccd8;background:white;cursor:pointer;color:#888;margin-left:auto;font-family:'Outfit',sans-serif;transition:all 0.15s}
+.note-btn:hover{border-color:#6B21A8;color:#6B21A8}
+.note-btn.on{background:#FCEBEB;border-color:#E24B4A;color:#A32D2D;font-weight:600}
+.note-expand{margin-top:12px;padding-top:12px;border-top:0.5px solid #e0dce8;display:none}
+.note-expand.open{display:block}
+.note-textarea{width:100%;font-size:12px;padding:9px 11px;border:0.5px solid #d0ccd8;border-radius:8px;background:#f9f8fb;color:#1a0533;resize:vertical;font-family:'Outfit',sans-serif;min-height:60px;outline:none}
+.note-textarea:focus{border-color:#6B21A8}
+.date-input{font-size:12px;padding:4px 9px;border:0.5px solid #d0ccd8;border-radius:7px;background:#f9f8fb;color:#1a0533;font-family:'Outfit',sans-serif;outline:none}
+.date-input:focus{border-color:#6B21A8}
+.save-btn{margin-top:8px;font-size:12px;padding:6px 16px;background:#6B21A8;color:white;border:none;border-radius:7px;cursor:pointer;font-family:'Outfit',sans-serif;font-weight:500}
+.save-btn:hover{background:#534AB7}
+.back-link{font-size:13px;color:#6B21A8;font-weight:600;cursor:pointer;background:none;border:none;padding:0;margin-bottom:16px;display:inline-flex;align-items:center;gap:5px;font-family:'Outfit',sans-serif}
+.back-link:hover{opacity:0.7}
+.no-data{padding:32px;text-align:center;color:#888;font-size:14px}
+
+/* CHART CONTAINERS */
+.chart-wrap{position:relative;height:180px;display:flex;align-items:center;justify-content:center}
+.chart-donut-wrap{position:relative;height:160px;width:160px;margin:0 auto}
+.donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
+.donut-num{font-size:22px;font-weight:700;color:#1a0533}
+.donut-lbl{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.05em}
+.legend-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:12px;color:#555}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* EMPTY */
+.empty-state{padding:24px;text-align:center;color:#aaa;font-size:13px}
+
+@media(max-width:768px){
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .grid-2,.grid-3,.grid-1-2,.grid-2-1{grid-template-columns:1fr}
+  .content{padding:16px}
+  .topbar{padding:0 16px}
+  .nav-tabs{padding:0 16px;overflow-x:auto}
+  .bloque-card{max-width:100%}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:11px">
+    <div class="logo-box">
+      <div class="logo-box-text">LLA</div>
+      <div class="logo-bar"></div>
+    </div>
+    <div>
+      <div class="logo-text">Bloque LLA</div>
+      <div class="logo-sub">Concejo Deliberante · La Plata</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="session-badge">Sesión Ordinaria N°1 · 03/03/2026</div>
+    <div class="alert-count-top" id="alert-count-top">0 alertas</div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav-tabs">
+  <div class="nav-tab active" onclick="switchTab('dashboard',this)">Dashboard</div>
+  <div class="nav-tab" onclick="switchTab('proyectos-nav',this)">Proyectos</div>
+  <div class="nav-tab" onclick="switchTab('comisiones-nav',this)">Comisiones</div>
+</div>
+
+<div class="content">
+
+  <!-- BANNER -->
+  <div class="banner-alert" id="banner-alert">⚠ Hay proyectos con más de 60 días sin respuesta — solicitar pronto despacho.</div>
+
+  <!-- ===== TAB: DASHBOARD ===== -->
+  <div id="tab-dashboard">
+
+    <!-- KPIs -->
+    <div class="stats-grid" id="dash-stats"></div>
+
+    <!-- ROW 1: bloque + funnel + tipos -->
+    <div class="grid-3">
+      <!-- Bloque card + import -->
+      <div>
+        <div class="bloque-card" onclick="switchToProyectos()">
+          <div class="bloque-icon">
+            <div class="bloque-icon-text">LLA</div>
+            <div class="bloque-icon-bar"></div>
+          </div>
+          <div>
+            <div class="bloque-name">La Libertad Avanza</div>
+            <div class="bloque-meta" id="bloque-meta-text">—</div>
+          </div>
+          <div class="bloque-arrow">›</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;background:white;border:0.5px solid #e0dce8;border-radius:12px;padding:14px 18px;margin-bottom:0">
+          <div style="flex:1">
+            <div style="font-size:13px;color:#888" id="sync-label">Verificando última sincronización...</div>
+          </div>
+          <button class="import-btn" id="sync-btn" onclick="syncFromSheets(false)" style="background:#1a0533">
+            ↻ Sincronizar Sheet
+          </button>
+        </div>
+      </div>
+
+      <!-- Embudo de estados -->
+      <div class="card">
+        <div class="card-title"><span>📊</span> Embudo de estados</div>
+        <div id="funnel-container"></div>
+      </div>
+
+      <!-- Tipos de proyecto donut -->
+      <div class="card">
+        <div class="card-title"><span>🗂</span> Tipos de proyecto</div>
+        <div class="chart-donut-wrap">
+          <canvas id="chart-tipos"></canvas>
+          <div class="donut-center">
+            <div class="donut-num" id="donut-total">—</div>
+            <div class="donut-lbl">Total</div>
+          </div>
+        </div>
+        <div id="tipos-legend" style="margin-top:12px"></div>
+      </div>
+    </div>
+
+    <!-- ROW 2: Alertas activas + Próximas a vencer -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title" style="justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:8px"><span>🚨</span> Alertas activas (+60 días)</div>
+          <span id="alert-badge-dash" style="background:#FCEBEB;color:#A32D2D;font-size:11px;font-weight:700;padding:3px 9px;border-radius:10px;display:none">0</span>
+        </div>
+        <div id="alertas-list"><div class="empty-state">Sin alertas activas ✓</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span>⏳</span> Próximas a vencer (45–59 días)</div>
+        <div id="proximas-list"><div class="empty-state">Sin proyectos próximos a vencer</div></div>
+      </div>
+    </div>
+
+    <!-- ROW 3: Ranking concejales + Categorías con más pendientes -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title"><span>🏆</span> Ranking por tasa de aprobación</div>
+        <div id="ranking-aprobacion"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span>📌</span> Comisiones con más pendientes</div>
+        <div id="cats-pendientes"></div>
+      </div>
+    </div>
+
+    <!-- ROW 4: Proyectos por consejal (barras) + Actividad reciente -->
+    <div class="grid-2-1">
+      <div class="card">
+        <div class="card-title"><span>👥</span> Proyectos por consejal</div>
+        <div class="chart-wrap"><canvas id="chart-consejal"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span>🕐</span> Actividad reciente</div>
+        <div id="actividad-list"><div class="empty-state">Sin cambios registrados</div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== TAB: COMISIONES ===== -->
+  <div id="tab-comisiones" style="display:none">
+
+    <div id="view-comisiones-list">
+      <div class="stats-grid" id="stats-comisiones"></div>
+      <div id="audit-panel" style="display:none;background:white;border:0.5px solid #e0dce8;border-radius:14px;padding:18px 20px;margin-bottom:18px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="font-size:13px;font-weight:600;color:#1a0533">🔍 Auditoría de categorías</div>
+          <button onclick="document.getElementById('audit-panel').style.display='none'" style="font-size:12px;color:#888;background:none;border:none;cursor:pointer">✕ Cerrar</button>
+        </div>
+        <div id="audit-content"></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="section-label" style="margin-bottom:0">Comisiones</div>
+        <button onclick="runAudit()" style="font-size:12px;padding:5px 14px;background:#1a0533;color:white;border:none;border-radius:8px;cursor:pointer;font-family:inherit">🔍 Auditar categorías</button>
+      </div>
+      <div class="cat-grid" id="comisiones-grid"></div>
+    </div>
+
+    <div id="view-comision-detalle" style="display:none">
+      <button class="back-link" onclick="backToComisiones()">← Comisiones</button>
+      <div class="breadcrumb">
+        <span class="bc-link" onclick="backToComisiones()">Comisiones</span>
+        <span class="bc-sep">›</span>
+        <span id="bc-comision-nombre"></span>
+      </div>
+      <div class="det-header">
+        <div class="det-avatar" id="com-det-icon" style="border-radius:12px;font-size:22px;background:#1a0533"></div>
+        <div>
+          <div class="det-name" id="com-det-name"></div>
+          <div class="det-sub" id="com-det-sub"></div>
+        </div>
+      </div>
+      <div class="filter-row" id="com-filter-row"></div>
+      <div class="proj-list" id="com-proj-list"></div>
+    </div>
+
+  </div>
+
+  <!-- ===== TAB: PROYECTOS ===== -->
+  <div id="tab-proyectos" style="display:none">
+
+    <!-- VISTA: BLOQUES -->
+    <div id="view-bloque">
+      <div class="stats-grid" id="stats-grid-p"></div>
+      <div class="section-label">Bloques</div>
+      <div class="bloque-card" onclick="goConcejales()">
+        <div class="bloque-icon">
+          <div class="bloque-icon-text">LLA</div>
+          <div class="bloque-icon-bar"></div>
+        </div>
+        <div>
+          <div class="bloque-name">La Libertad Avanza</div>
+          <div class="bloque-meta" id="bloque-meta-p">—</div>
+        </div>
+        <div class="bloque-arrow">›</div>
+      </div>
+    </div>
+
+    <!-- VISTA: CONSEJALES -->
+    <div id="view-concejales" style="display:none">
+      <button class="back-link" onclick="goBloque()">← Bloques</button>
+      <div class="breadcrumb"><span class="bc-link" onclick="goBloque()">Bloques</span><span class="bc-sep">›</span><span>La Libertad Avanza</span></div>
+      <div class="stats-grid" id="stats-consejal"></div>
+      <div class="section-label">Concejales</div>
+      <div class="concejales-grid" id="concejales-grid"></div>
+    </div>
+
+    <!-- VISTA: CATEGORIAS -->
+    <div id="view-categorias" style="display:none">
+      <button class="back-link" onclick="goConcejales()">← Concejales</button>
+      <div class="breadcrumb"><span class="bc-link" onclick="goBloque()">Bloques</span><span class="bc-sep">›</span><span class="bc-link" onclick="goConcejales()">LLA</span><span class="bc-sep">›</span><span id="bc-consejal"></span></div>
+      <div class="det-header">
+        <div class="det-avatar" id="cat-avatar"></div>
+        <div><div class="det-name" id="cat-det-name"></div><div class="det-sub" id="cat-det-sub"></div></div>
+      </div>
+      <div class="section-label">Categorías</div>
+      <div class="cat-grid" id="cat-grid"></div>
+    </div>
+
+    <!-- VISTA: PROYECTOS LIST -->
+    <div id="view-proyectos-list" style="display:none">
+      <button class="back-link" onclick="goCategorias()">← Categorías</button>
+      <div class="breadcrumb"><span class="bc-link" onclick="goBloque()">Bloques</span><span class="bc-sep">›</span><span class="bc-link" onclick="goConcejales()">LLA</span><span class="bc-sep">›</span><span class="bc-link" id="bc-consejal2" onclick="goCategorias()" style="cursor:pointer"></span><span class="bc-sep">›</span><span id="bc-cat"></span></div>
+      <div class="section-header">
+        <div><div class="section-title2" id="proj-section-title"></div><div class="section-meta" id="proj-section-meta"></div></div>
+      </div>
+      <div class="filter-row" id="filter-row"></div>
+      <div class="proj-list" id="proj-list"></div>
+    </div>
+
+  </div>
+
+</div>
+</div>
+
+<script>
+// ===== CONFIG =====
+const SHEETS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSe2GqYfeEiVAaXwIrkaYooa1u8VKnFb-7KHoaZfN81bvx7xMv8gVzlNzrO4I402g/pub?gid=1601263132&single=true&output=csv";
+const LS_DATA    = "lla_data_v1";
+const LS_STATUS  = "lla_statuses_v1";
+const LS_NOTES   = "lla_notes_v1";
+const LS_DATES   = "lla_dates_v1";
+const LS_SYNCED  = "lla_last_sync_v1";
+
+// ===== PERSISTENCE =====
+function saveLocal(){
+  try{
+    localStorage.setItem(LS_DATA,   JSON.stringify(DATA));
+    localStorage.setItem(LS_STATUS, JSON.stringify(statuses));
+    localStorage.setItem(LS_NOTES,  JSON.stringify(alertNotes));
+    localStorage.setItem(LS_DATES,  JSON.stringify(alertDates));
+  }catch(e){console.warn('localStorage full',e);}
+}
+
+function loadLocal(){
+  try{
+    const d=localStorage.getItem(LS_DATA);
+    if(d){ const parsed=JSON.parse(d); Object.assign(DATA,parsed); }
+    const s=localStorage.getItem(LS_STATUS);
+    if(s) Object.assign(statuses,JSON.parse(s));
+    const n=localStorage.getItem(LS_NOTES);
+    if(n) Object.assign(alertNotes,JSON.parse(n));
+    const dt=localStorage.getItem(LS_DATES);
+    if(dt) Object.assign(alertDates,JSON.parse(dt));
+  }catch(e){console.warn('Error loading localStorage',e);}
+}
+
+function lastSyncLabel(){
+  const t=localStorage.getItem(LS_SYNCED);
+  if(!t) return 'Nunca sincronizado';
+  const d=new Date(parseInt(t));
+  return 'Últ. sync: '+d.toLocaleDateString('es-AR')+' '+d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ===== CSV PARSER =====
+function parseCSV(text){
+  const lines=text.trim().split(/\r?\n/);
+  if(!lines.length) return [];
+  // Find header row: the one that contains "Expediente" or "Concejal"
+  let headerIdx=0;
+  for(let i=0;i<Math.min(lines.length,8);i++){
+    const l=lines[i].toLowerCase();
+    if(l.includes('expediente')||l.includes('concejal')||l.includes('descripci')){
+      headerIdx=i; break;
+    }
+  }
+  const splitLine=(line)=>{
+    const vals=[]; let cur='', inQ=false;
+    for(let i=0;i<line.length;i++){
+      const c=line[i];
+      if(c==='"'){ inQ=!inQ; }
+      else if(c===','&&!inQ){ vals.push(cur.trim().replace(/^"|"$/g,'')); cur=''; }
+      else cur+=c;
+    }
+    vals.push(cur.trim().replace(/^"|"$/g,''));
+    return vals;
+  };
+  const headers=splitLine(lines[headerIdx]).map(h=>h.trim());
+  return lines.slice(headerIdx+1).map(line=>{
+    const vals=splitLine(line);
+    const row={};
+    headers.forEach((h,i)=>{ row[h]=vals[i]||''; });
+    return row;
+  }).filter(row=>Object.values(row).some(v=>v.trim()));
+}
+
+// Concejal name passthrough — names come clean from Sheet
+function mapConcejal(raw){ return raw ? raw.trim() : ''; }
+
+// ===== COLUMN MAP — adapted to actual Sheet structure =====
+// Columns: N° | N° Expediente | Concejal/a | Tipo | Comisión | (vacía) | Descripción
+function mapRow(row){
+  const get=(...keys)=>{
+    for(const k of keys){
+      // exact match
+      if(row[k]!==undefined && String(row[k]).trim()) return String(row[k]).trim();
+      // case-insensitive
+      const found=Object.keys(row).find(rk=>rk.toLowerCase().trim()===k.toLowerCase().trim());
+      if(found && String(row[found]).trim()) return String(row[found]).trim();
+      // partial match
+      const partial=Object.keys(row).find(rk=>rk.toLowerCase().includes(k.toLowerCase()));
+      if(partial && String(row[partial]).trim()) return String(row[partial]).trim();
+    }
+    return '';
+  };
+  const rawConcejal = get('Concejal/a','Concejal','concejal','Autor','autor');
+  const concejal = mapConcejal(rawConcejal);
+  return {
+    num:      get('N° Expediente','Expediente','expediente','Nro Expediente','Exp','Número Expediente'),
+    tipo:     get('Tipo','tipo'),
+    tema:     get('Descripción','Descripcion','descripcion','descripción','Tema','tema','Asunto'),
+    cat:      get('Comisión','Comision','comision','comisión','Categoría','Categoria','categoria'),
+    estado:   get('Estado','estado','Instancia','instancia'),
+    fecha:    get('FechaSesion','FechaPresentacion','Fecha','fecha','Sesión','Sesion'),
+    consejal: concejal
+  };
+}
+
+// ===== SYNC FROM SHEETS =====
+async function syncFromSheets(silent=false){
+  const btn=document.getElementById('sync-btn');
+  const lbl=document.getElementById('sync-label');
+  if(btn){ btn.disabled=true; btn.textContent='Sincronizando...'; }
+  try{
+    const resp=await fetch(SHEETS_CSV_URL);
+    if(!resp.ok) throw new Error('HTTP '+resp.status);
+    const text=await resp.text();
+    const rows=parseCSV(text);
+    // Clear all proyectos before repopulating from sheet (full sync)
+    Object.keys(DATA).forEach(k=>{ DATA[k].proyectos=[]; });
+
+    let added=0;
+    rows.forEach(raw=>{
+      const r=mapRow(raw);
+      if(!r.num || !r.tema) return;
+      const consejal=r.consejal||'';
+      if(!consejal) return;
+      if(!DATA[consejal]){
+        const words=consejal.trim().split(/\s+/);
+        const initials=words.filter(Boolean).map(w=>w[0].toUpperCase()).slice(0,2).join('');
+        DATA[consejal]={initials,proyectos:[]};
+      }
+      // Preserve local status overrides, rest comes from sheet
+      DATA[consejal].proyectos.push({
+        num:r.num,
+        tipo:r.tipo||'Resolución',
+        tema:r.tema||'Sin descripción',
+        cat:r.cat||'Obras Públicas',
+        estado:statuses[r.num]||(r.estado||'pendiente').toLowerCase(),
+        fecha:r.fecha||new Date().toISOString().split('T')[0]
+      });
+      added++;
+    });
+    const updated=0;
+    localStorage.setItem(LS_SYNCED, Date.now().toString());
+    saveLocal();
+    if(lbl) lbl.textContent=lastSyncLabel();
+    if(!silent) showToast(`✅ Sincronizado: ${added} proyectos cargados desde el Sheet`);
+    renderDashboard();
+  }catch(err){
+    if(!silent) showToast('⚠ Error al sincronizar. Verificá la conexión o el link del Sheet.');
+    console.error(err);
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent='↻ Sincronizar Sheet'; }
+  }
+}
+
+// ===== TOAST =====
+function showToast(msg){
+  let t=document.getElementById('toast');
+  if(!t){ t=document.createElement('div'); t.id='toast'; t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a0533;color:white;padding:10px 20px;border-radius:30px;font-size:13px;font-weight:500;z-index:9999;transition:opacity 0.3s;pointer-events:none'; document.body.appendChild(t); }
+  t.textContent=msg; t.style.opacity='1';
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>{ t.style.opacity='0'; },3000);
+}
+
+const DATA = {
+  "Guillermo Bardón":       {initials:"GB", proyectos:[]},
+  "María Florencia Barcia": {initials:"FB", proyectos:[]},
+  "María Florencia Defeo":  {initials:"FD", proyectos:[]},
+  "Juan Pablo Allan":       {initials:"JA", proyectos:[]},
+  "Sabrina Morales":        {initials:"SM", proyectos:[]},
+  "Gastón Álvarez":         {initials:"GA", proyectos:[]},
+  "Soledad Pedernera":      {initials:"SP", proyectos:[]}
+};
+
+const CAT_ICONS={"Obras Públicas":"🏗","Seguridad":"🚔","Legislación":"📋","Cultura":"🎭","Ambiente":"🌿","Salud":"⚕","Hacienda":"💰","Planeamiento":"📐","Aprobado":"✅","Transporte y Hacienda":"🚌"};
+const CAT_STYLES={"Obras Públicas":"p-obras","Seguridad":"p-seg","Legislación":"p-leg","Cultura":"p-cult","Ambiente":"p-amb","Salud":"p-sal","Hacienda":"p-hac","Planeamiento":"p-plan","Aprobado":"p-apr","Transporte y Hacienda":"p-transp"};
+const TIPO_CLS={"Ordenanza":"tipo-ord","Decreto":"tipo-dec","Resolución":"tipo-res"};
+const ESTADOS=[{v:"pendiente",l:"Pendiente"},{v:"en comision",l:"En comisión"},{v:"en sesion",l:"En sesión"},{v:"aprobado",l:"Aprobado"},{v:"rechazado",l:"Rechazado"}];
+const FUNNEL_COLORS={"pendiente":"#6B21A8","en comision":"#185FA5","en sesion":"#854F0B","aprobado":"#3B6D11","rechazado":"#A32D2D"};
+
+let statuses={}, alertNotes={}, alertDates={}, currentConsejal=null, currentCat=null, currentFilter="todos";
+let activityLog=[];
+const today=new Date();
+
+function diasDesde(fecha){if(!fecha)return 0;const d=new Date(fecha);return Math.floor((today-d)/(1000*60*60*24));}
+function getStatus(p){return statuses[p.num]||p.estado;}
+function getStatusLabel(s){return ESTADOS.find(e=>e.v===s)?.l||'Pendiente';}
+function getDaysBadge(dias,estado){
+  if(estado==='aprobado'||estado==='rechazado') return '';
+  if(dias>=60) return `<span class="days-badge days-alert">⚠ ${dias} días — Pronto despacho</span>`;
+  if(dias>=45) return `<span class="days-badge days-warn">${dias} días (vence en ${60-dias}d)</span>`;
+  return `<span class="days-badge days-ok">${dias} días desde sesión</span>`;
+}
+
+function allProyectos(){return Object.entries(DATA).flatMap(([n,d])=>d.proyectos.map(p=>({...p,consejal:n})));}
+
+function computeStats(){
+  const all=allProyectos();
+  const total=all.length;
+  const apros=all.filter(p=>getStatus(p)==='aprobado').length;
+  const pend=all.filter(p=>getStatus(p)==='pendiente').length;
+  const alertas=all.filter(p=>getStatus(p)!=='aprobado'&&getStatus(p)!=='rechazado'&&diasDesde(alertDates[p.num]||p.fecha)>=60).length;
+  return {total,apros,pend,alertas};
+}
+
+function updateBanner(){
+  const n=computeStats().alertas;
+  const b=document.getElementById('banner-alert');
+  const t=document.getElementById('alert-count-top');
+  if(n>0){b.classList.add('show');t.style.display='block';t.textContent=n+' alerta'+(n>1?'s':'');}
+  else{b.classList.remove('show');t.style.display='none';}
+}
+
+/* ===== DASHBOARD RENDER ===== */
+let chartTipos=null, chartConcejal=null;
+
+function renderDashboard(){
+  const {total,apros,pend,alertas}=computeStats();
+  const tasaApro=total>0?Math.round(apros/total*100):0;
+
+  document.getElementById('dash-stats').innerHTML=`
+    <div class="stat-card"><div class="stat-num">${Object.keys(DATA).length}</div><div class="stat-lbl">Concejales</div></div>
+    <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-lbl">Total proyectos</div></div>
+    <div class="stat-card"><div class="stat-num green">${apros} <span style="font-size:14px;color:#888">(${tasaApro}%)</span></div><div class="stat-lbl">Aprobados</div></div>
+    <div class="stat-card"><div class="stat-num red">${alertas}</div><div class="stat-lbl">⚠ Alertas 60d</div></div>
+  `;
+  document.getElementById('bloque-meta-text').textContent=`${Object.keys(DATA).length} concejales · ${total} proyectos`;
+
+  renderFunnel();
+  renderTiposChart();
+  renderAlertasList();
+  renderProximasList();
+  renderRanking();
+  renderCatsPendientes();
+  renderConcejalChart();
+  renderActividad();
+  updateBanner();
+}
+
+function renderFunnel(){
+  const all=allProyectos();
+  const counts={};
+  ESTADOS.forEach(e=>{counts[e.v]=0;});
+  all.forEach(p=>{const s=getStatus(p);if(counts[s]!==undefined)counts[s]++;});
+  const total=all.length;
+  const container=document.getElementById('funnel-container');
+  container.innerHTML=ESTADOS.map(e=>{
+    const c=counts[e.v], pct=total>0?Math.round(c/total*100):0;
+    return `<div class="funnel-row">
+      <div class="funnel-label">${e.l}</div>
+      <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${Math.max(pct,8)}%;background:${FUNNEL_COLORS[e.v]}"><span>${c}</span></div></div>
+      <div class="funnel-count">${pct}%</div>
+    </div>`;
+  }).join('');
+}
+
+function renderTiposChart(){
+  const all=allProyectos();
+  const ords=all.filter(p=>p.tipo==='Ordenanza').length;
+  const decs=all.filter(p=>p.tipo==='Decreto').length;
+  const ress=all.filter(p=>p.tipo==='Resolución').length;
+  document.getElementById('donut-total').textContent=all.length;
+  if(chartTipos) chartTipos.destroy();
+  const ctx=document.getElementById('chart-tipos').getContext('2d');
+  chartTipos=new Chart(ctx,{
+    type:'doughnut',
+    data:{labels:['Ordenanza','Decreto','Resolución'],datasets:[{data:[ords,decs,ress],backgroundColor:['#EEEDFE','#E6F1FB','#EAF3DE'],borderColor:['#534AB7','#185FA5','#3B6D11'],borderWidth:2,hoverOffset:4}]},
+    options:{cutout:'72%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.label+': '+c.parsed}}},animation:{duration:600}}
+  });
+  document.getElementById('tipos-legend').innerHTML=`
+    <div class="legend-row"><div class="legend-dot" style="background:#534AB7"></div>Ordenanza <strong style="margin-left:auto">${ords}</strong></div>
+    <div class="legend-row"><div class="legend-dot" style="background:#185FA5"></div>Decreto <strong style="margin-left:auto">${decs}</strong></div>
+    <div class="legend-row"><div class="legend-dot" style="background:#3B6D11"></div>Resolución <strong style="margin-left:auto">${ress}</strong></div>
+  `;
+}
+
+function renderAlertasList(){
+  const all=allProyectos().filter(p=>getStatus(p)!=='aprobado'&&getStatus(p)!=='rechazado'&&diasDesde(alertDates[p.num]||p.fecha)>=60);
+  const badge=document.getElementById('alert-badge-dash');
+  if(all.length>0){badge.style.display='block';badge.textContent=all.length;}else{badge.style.display='none';}
+  if(!all.length){document.getElementById('alertas-list').innerHTML='<div class="empty-state">Sin alertas activas ✓</div>';return;}
+  document.getElementById('alertas-list').innerHTML=all.slice(0,6).map(p=>{
+    const dias=diasDesde(alertDates[p.num]||p.fecha);
+    return `<div class="alert-proj-row">
+      <div class="alert-dot"></div>
+      <div class="alert-proj-name"><strong>${p.consejal}</strong> — ${p.tema.substring(0,60)}${p.tema.length>60?'…':''}</div>
+      <div class="alert-proj-meta">${dias}d</div>
+    </div>`;
+  }).join('')+(all.length>6?`<div style="font-size:11px;color:#A32D2D;padding-top:8px;text-align:center">+${all.length-6} más</div>`:'');
+}
+
+function renderProximasList(){
+  const all=allProyectos().filter(p=>getStatus(p)!=='aprobado'&&getStatus(p)!=='rechazado'&&diasDesde(alertDates[p.num]||p.fecha)>=45&&diasDesde(alertDates[p.num]||p.fecha)<60);
+  if(!all.length){document.getElementById('proximas-list').innerHTML='<div class="empty-state">Sin proyectos próximos a vencer</div>';return;}
+  document.getElementById('proximas-list').innerHTML=all.slice(0,6).map(p=>{
+    const dias=diasDesde(alertDates[p.num]||p.fecha), restantes=60-dias;
+    return `<div class="warn-proj-row">
+      <div class="warn-dot"></div>
+      <div class="warn-proj-name"><strong>${p.consejal}</strong> — ${p.tema.substring(0,60)}${p.tema.length>60?'…':''}</div>
+      <div class="warn-proj-meta">vence en ${restantes}d</div>
+    </div>`;
+  }).join('');
+}
+
+function renderRanking(){
+  const rows=Object.entries(DATA).map(([nombre,data])=>{
+    const total=data.proyectos.length;
+    const apros=data.proyectos.filter(p=>getStatus(p)==='aprobado').length;
+    const pct=total>0?Math.round(apros/total*100):0;
+    return {nombre,initials:data.initials,total,apros,pct};
+  }).sort((a,b)=>b.pct-a.pct);
+  const maxPct=rows[0]?.pct||1;
+  document.getElementById('ranking-aprobacion').innerHTML=rows.map((r,i)=>`
+    <div class="ranking-row">
+      <div class="rank-num">${i+1}</div>
+      <div class="rank-avatar">${r.initials}</div>
+      <div class="rank-name">${r.nombre.split(' ')[0]} ${r.nombre.split(' ').slice(-1)[0]}</div>
+      <div class="rank-bar-wrap"><div class="rank-bar" style="width:${Math.round(r.pct/maxPct*100)}%"></div></div>
+      <div class="rank-pct">${r.pct}%</div>
+      <div class="rank-count">${r.apros}/${r.total}</div>
+    </div>
+  `).join('');
+}
+
+function renderCatsPendientes(){
+  const all=allProyectos();
+  // Count pendientes per comision using same matching logic as getProyectosComision
+  const rows = Object.entries(COMISIONES).map(([key,com])=>{
+    const proyectos = getProyectosComision(key);
+    const pendientes = proyectos.filter(p=>getStatus(p)==='pendiente').length;
+    return {key, nombre:com.nombre, icono:com.icono, pendientes, total:proyectos.length};
+  }).filter(r=>r.pendientes>0).sort((a,b)=>b.pendientes-a.pendientes);
+  const max=rows[0]?.pendientes||1;
+  document.getElementById('cats-pendientes').innerHTML=rows.map(r=>`
+    <div class="cat-pend-row" style="cursor:pointer" onclick="goToComision('${r.key}')">
+      <div class="cat-pend-icon">${r.icono}</div>
+      <div class="cat-pend-name" style="font-size:12px;line-height:1.3">${r.nombre}</div>
+      <div class="cat-pend-bar-wrap"><div class="cat-pend-bar" style="width:${Math.round(r.pendientes/max*100)}%"></div></div>
+      <div class="cat-pend-count">${r.pendientes}</div>
+    </div>
+  `).join('');
+}
+
+function goToComision(key){
+  const tabs=document.querySelectorAll('.nav-tab');
+  switchTab('comisiones-nav', tabs[2]);
+  setTimeout(()=>openComision(key), 50);
+}
+
+function renderConcejalChart(){
+  const nombres=Object.keys(DATA);
+  const totales=nombres.map(n=>DATA[n].proyectos.length);
+  const aprobados=nombres.map(n=>DATA[n].proyectos.filter(p=>getStatus(p)==='aprobado').length);
+  const labels=nombres.map(n=>n.split(' ').slice(-1)[0]);
+  if(chartConcejal) chartConcejal.destroy();
+  const ctx=document.getElementById('chart-consejal').getContext('2d');
+  chartConcejal=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {label:'Total',data:totales,backgroundColor:'#EEEDFE',borderColor:'#534AB7',borderWidth:1.5,borderRadius:6},
+        {label:'Aprobados',data:aprobados,backgroundColor:'#EAF3DE',borderColor:'#3B6D11',borderWidth:1.5,borderRadius:6}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Outfit',size:11},boxWidth:10,padding:12}}},scales:{x:{grid:{display:false},ticks:{font:{family:'Outfit',size:11}}},y:{grid:{color:'#f0edf5'},ticks:{font:{family:'Outfit',size:11},stepSize:5}}}}
+  });
+}
+
+function renderActividad(){
+  if(!activityLog.length){document.getElementById('actividad-list').innerHTML='<div class="empty-state">Sin cambios registrados en esta sesión</div>';return;}
+  const ACT_COLORS={aprobado:'#EAF3DE',pendiente:'#FAEEDA','en comision':'#E6F1FB','en sesion':'#EEEDFE',rechazado:'#FCEBEB'};
+  document.getElementById('actividad-list').innerHTML=activityLog.slice(-8).reverse().map(a=>`
+    <div class="act-row">
+      <div class="act-icon" style="background:${ACT_COLORS[a.nuevo]||'#f0edf5'};font-size:14px">→</div>
+      <div class="act-text"><strong>${a.consejal.split(' ')[0]}</strong> · Exp. ${a.num}<br><span style="color:#888">${getStatusLabel(a.anterior)} → <strong>${getStatusLabel(a.nuevo)}</strong></span></div>
+      <div class="act-time">${a.hora}</div>
+    </div>
+  `).join('');
+}
+
+/* ===== TABS ===== */
+function switchTab(tab, el){
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  if(el) el.classList.add('active');
+  document.getElementById('tab-dashboard').style.display=tab==='dashboard'?'block':'none';
+  document.getElementById('tab-proyectos').style.display=tab==='proyectos-nav'?'block':'none';
+  document.getElementById('tab-comisiones').style.display=tab==='comisiones-nav'?'block':'none';
+  if(tab==='dashboard') renderDashboard();
+  if(tab==='proyectos-nav'){renderStatsP();showP('view-bloque');}
+  if(tab==='comisiones-nav') renderComisiones();
+}
+
+function switchToProyectos(){
+  const tabs=document.querySelectorAll('.nav-tab');
+  switchTab('proyectos-nav',tabs[1]);
+}
+
+/* ===== PROYECTOS NAV ===== */
+function showP(id){['view-bloque','view-concejales','view-categorias','view-proyectos-list'].forEach(v=>document.getElementById(v).style.display='none');document.getElementById(id).style.display='block';}
+
+function renderStatsP(){
+  const {total,apros,pend,alertas}=computeStats();
+  const html=`
+    <div class="stat-card"><div class="stat-num">${Object.keys(DATA).length}</div><div class="stat-lbl">Concejales</div></div>
+    <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-lbl">Total proyectos</div></div>
+    <div class="stat-card"><div class="stat-num green">${apros}</div><div class="stat-lbl">Aprobados</div></div>
+    <div class="stat-card"><div class="stat-num red">${alertas}</div><div class="stat-lbl">⚠ Alertas</div></div>
+  `;
+  document.getElementById('stats-grid-p').innerHTML=html;
+  document.getElementById('bloque-meta-p').textContent=`${Object.keys(DATA).length} concejales · ${total} proyectos`;
+}
+
+function goBloque(){renderStatsP();showP('view-bloque');updateBanner();}
+
+function goConcejales(){
+  showP('view-concejales');
+  const {total,apros,alertas}=computeStats();
+  document.getElementById('stats-consejal').innerHTML=`
+    <div class="stat-card"><div class="stat-num">${Object.keys(DATA).length}</div><div class="stat-lbl">Concejales</div></div>
+    <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-lbl">Proyectos</div></div>
+    <div class="stat-card"><div class="stat-num green">${apros}</div><div class="stat-lbl">Aprobados</div></div>
+    <div class="stat-card"><div class="stat-num red">${alertas}</div><div class="stat-lbl">⚠ Alertas</div></div>
+  `;
+  const grid=document.getElementById('concejales-grid');
+  grid.innerHTML='';
+  Object.entries(DATA).forEach(([nombre,data])=>{
+    const cats=[...new Set(data.proyectos.map(p=>p.cat))];
+    const pills=cats.slice(0,3).map(c=>`<span class="pill ${CAT_STYLES[c]||'p-obras'}">${c}</span>`).join('')+(cats.length>3?`<span class="pill p-apr">+${cats.length-3}</span>`:'');
+    const al=data.proyectos.filter(p=>diasDesde(alertDates[p.num]||p.fecha)>=60&&getStatus(p)!=='aprobado'&&getStatus(p)!=='rechazado').length;
+    const div=document.createElement('div');
+    div.className='consejal-card';
+    div.innerHTML=`<div class="avatar">${data.initials}</div><div class="consejal-name">${nombre}</div><div class="consejal-count">${data.proyectos.length} proyectos${al>0?` · <span style="color:#A32D2D;font-weight:700">⚠ ${al}</span>`:''}</div><div class="pills-row">${pills}</div>`;
+    div.onclick=()=>goCategorias(nombre);
+    grid.appendChild(div);
+  });
+  updateBanner();
+}
+
+function goCategorias(nombre){
+  if(nombre) currentConsejal=nombre;
+  showP('view-categorias');
+  const data=DATA[currentConsejal];
+  document.getElementById('bc-consejal').textContent=currentConsejal;
+  document.getElementById('cat-avatar').textContent=data.initials;
+  document.getElementById('cat-det-name').textContent=currentConsejal;
+  document.getElementById('cat-det-sub').textContent=`Bloque LLA · ${data.proyectos.length} proyectos`;
+  const cats={};
+  data.proyectos.forEach(p=>{cats[p.cat]=(cats[p.cat]||0)+1;});
+  const maxCount=Math.max(...Object.values(cats));
+  const grid=document.getElementById('cat-grid');
+  grid.innerHTML='';
+  const mkCard=(name,count,icon)=>{
+    const div=document.createElement('div');
+    div.className='cat-card';
+    div.innerHTML=`<div class="cat-icon">${icon}</div><div class="cat-name">${name}</div><div class="cat-count">${count} proyecto${count!==1?'s':''}</div><div class="cat-bar"><div class="cat-bar-fill" style="width:${Math.round(count/maxCount*100)}%"></div></div>`;
+    div.onclick=()=>goProyectosView(name==='Todos'?null:name);
+    grid.appendChild(div);
+  };
+  mkCard('Todos',data.proyectos.length,'📂');
+  Object.entries(cats).forEach(([cat,count])=>mkCard(cat,count,CAT_ICONS[cat]||'📄'));
+}
+
+function goProyectosView(cat){
+  currentCat=cat; currentFilter='todos';
+  showP('view-proyectos-list');
+  const data=DATA[currentConsejal];
+  document.getElementById('bc-consejal2').textContent=currentConsejal;
+  document.getElementById('bc-cat').textContent=cat||'Todos';
+  document.getElementById('proj-section-title').textContent=cat?`${CAT_ICONS[cat]||'📄'} ${cat}`:'Todos los proyectos';
+  const filtered=cat?data.proyectos.filter(p=>p.cat===cat):data.proyectos;
+  document.getElementById('proj-section-meta').textContent=`${filtered.length} proyecto${filtered.length!==1?'s':''} · ${currentConsejal}`;
+  renderFilterRow(filtered);
+  renderProjList(filtered);
+}
+
+function renderFilterRow(filtered){
+  const estados=['todos',...new Set(filtered.map(p=>getStatus(p)))];
+  document.getElementById('filter-row').innerHTML=estados.map(e=>`<button class="filter-btn ${currentFilter===e?'active':''}" onclick="setFilter('${e}')">${e==='todos'?'Todos':getStatusLabel(e)}</button>`).join('');
+}
+
+function setFilter(f){
+  currentFilter=f;
+  const data=DATA[currentConsejal];
+  const filtered=currentCat?data.proyectos.filter(p=>p.cat===currentCat):data.proyectos;
+  renderFilterRow(filtered);renderProjList(filtered);
+}
+
+function renderProjList(allFiltered){
+  const list=document.getElementById('proj-list');
+  const items=currentFilter==='todos'?allFiltered:allFiltered.filter(p=>getStatus(p)===currentFilter);
+  if(!items.length){list.innerHTML='<div class="no-data">No hay proyectos en esta categoría.</div>';return;}
+  list.innerHTML=items.map(p=>{
+    const s=getStatus(p), dias=diasDesde(alertDates[p.num]||p.fecha), hasNote=alertNotes[p.num];
+    const isAlert=s!=='aprobado'&&s!=='rechazado'&&dias>=60;
+    const tipoCls=TIPO_CLS[p.tipo]||'tipo-res';
+    const opts=ESTADOS.map(e=>`<option value="${e.v}"${s===e.v?' selected':''}>${e.l}</option>`).join('');
+    const curDate=alertDates[p.num]||p.fecha||'';
+    return `<div class="proj-item${isAlert?' alert-active':''}" id="pi-${p.num}">
+      <div class="proj-top">
+        <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap"><span class="proj-num">Exp. ${p.num}</span><span class="proj-tipo ${tipoCls}">${p.tipo}</span></div>
+        <select class="status-select" onchange="changeStatus('${p.num}',this.value)">${opts}</select>
+      </div>
+      <div class="proj-title">${p.tema}</div>
+      <div class="proj-footer">
+        <span class="pill ${CAT_STYLES[p.cat]||'p-obras'}">${p.cat}</span>
+        ${getDaysBadge(dias,s)}
+        <button class="note-btn${hasNote?' on':''}" onclick="toggleNote('${p.num}')">${hasNote?'⚑ Con nota':'+ Nota'}</button>
+      </div>
+      <div class="note-expand${hasNote?' open':''}" id="ae-${p.num}">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+          <span style="font-size:11px;color:#888">Fecha presentación a sesión:</span>
+          <input type="date" class="date-input" id="date-${p.num}" value="${curDate}">
+        </div>
+        <textarea class="note-textarea" id="note-${p.num}" placeholder="Nota de seguimiento...">${alertNotes[p.num]||''}</textarea>
+        <div style="display:flex;justify-content:flex-end"><button class="save-btn" onclick="saveNote('${p.num}')">Guardar</button></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function changeStatus(num,val){
+  const anterior=getStatus({num,estado:Object.values(DATA).flatMap(c=>c.proyectos).find(p=>p.num===num)?.estado||'pendiente'});
+  const now=new Date();
+  activityLog.push({num,consejal:currentConsejal,anterior:statuses[num]||anterior,nuevo:val,hora:now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0')});
+  statuses[num]=val;
+  saveLocal();
+  const data=DATA[currentConsejal];
+  const filtered=currentCat?data.proyectos.filter(p=>p.cat===currentCat):data.proyectos;
+  renderFilterRow(filtered);renderProjList(filtered);updateBanner();
+}
+
+function toggleNote(num){const ae=document.getElementById('ae-'+num);if(ae)ae.classList.toggle('open');}
+
+function saveNote(num){
+  const n=document.getElementById('note-'+num);
+  const d=document.getElementById('date-'+num);
+  if(n&&n.value.trim()) alertNotes[num]=n.value.trim(); else delete alertNotes[num];
+  if(d&&d.value){alertDates[num]=d.value;const p=Object.values(DATA).flatMap(c=>c.proyectos).find(p=>p.num===num);if(p) p.fecha=d.value;}
+  saveLocal();
+  const data=DATA[currentConsejal];
+  const filtered=currentCat?data.proyectos.filter(p=>p.cat===currentCat):data.proyectos;
+  renderProjList(filtered);updateBanner();
+}
+
+
+
+
+/* ===== COMISIONES DATA ===== */
+const COMISIONES = {
+  "Legislación": {
+    nombre: "Legislación, Interpretación y Reglamento",
+    icono: "📋",
+    miembros: ["Juan Manuel Granillo Fernández","Marcelo Galland","Pablo Elias","Josefina Bolis","Gustavo Staffolani","María Florencia Defeo","Sabrina Morales","Iván Zanetto"],
+    cats: ["Legislación","Legislación y Género"]
+  },
+  "Hacienda": {
+    nombre: "Hacienda, Presupuesto y Cuentas",
+    icono: "💰",
+    miembros: ["Pablo Elias","Micaela Maggio","Gastón Álvarez","Marcelo Galland","Guillermo Bardón","Nicolás Morzone","Gustavo Staffolani","Romina Santana"],
+    cats: ["Hacienda","Transporte y Hacienda","Turismo y Hacienda","Planeamiento y Hacienda","Desarrollo Local y Hacienda"]
+  },
+  "Planeamiento": {
+    nombre: "Planeamiento, Urbanismo y Tierras",
+    icono: "📐",
+    miembros: ["Sergio Resa","Soledad Pedernera","Darío Ganduglia","Josefina Bolis","Marcelo Galland","Juan Manuel Granillo Fernández","María Florencia Defeo","Juan Pablo Allan"],
+    cats: ["Planeamiento"]
+  },
+  "Obras Públicas": {
+    nombre: "Obras y Servicios Públicos",
+    icono: "🏗",
+    miembros: ["Gastón Álvarez","Micaela Maggio","Raúl Recavarren","Josefina Bolis","Pablo Poggio","Nicolás Morzone","Soledad Pedernera","Melany Horomadiuk"],
+    cats: ["Obras Públicas"]
+  },
+  "Transporte": {
+    nombre: "Transporte y Tránsito",
+    icono: "🚌",
+    miembros: ["María Florencia Barcia","Raúl Recavarren","Sol Maluendez","Micaela Maggio","Juan Manuel Granillo Fernández","Gastón Álvarez","Melany Horomadiuk","Juan Pablo Allan"],
+    cats: ["Transporte"]
+  },
+  "Desarrollo Local": {
+    nombre: "Desarrollo Local, Industria y Producción",
+    icono: "🏭",
+    miembros: ["María Ona Parrilli","Romina Santana","Nicolás Morzone","Pablo Poggio","Raúl Recavarren","Gastón Álvarez","Sabrina Morales","Melany Horomadiuk"],
+    cats: ["Desarrollo Local","Desarrollo Local y Legislación"]
+  },
+  "Seguridad": {
+    nombre: "Seguridad y Derechos Humanos",
+    icono: "🚔",
+    miembros: ["Juan Pablo Allan","Darío Ganduglia","Juan Manuel Granillo Fernández","Pablo Elias","Gisella Di Dio","Sol Maluendez","María Florencia Defeo","Gastón Álvarez"],
+    cats: ["Seguridad"]
+  },
+  "Cultura": {
+    nombre: "Cultura, Educación y Deporte",
+    icono: "🎭",
+    miembros: ["Melany Horomadiuk","Pablo Elias","María Florencia Defeo","Sabrina Morales","Sol Maluendez","Guillermo Bardón","Raúl Recavarren","Micaela Maggio"],
+    cats: ["Cultura"]
+  },
+  "Ambiente": {
+    nombre: "Ambiente y Calidad de Vida",
+    icono: "🌿",
+    miembros: ["Sabrina Morales","Pablo Poggio","María Ona Parrilli","Josefina Bolis","Pablo Elías","Soledad Pedernera","Iván Zanetto","Gustavo Staffolani"],
+    cats: ["Ambiente","Seguridad y Ambiente"]
+  },
+  "Niñeces": {
+    nombre: "Niñeces y Adolescencias",
+    icono: "👶",
+    miembros: ["Sol Maluendez","Iván Zanetto","Romina Santana","Gisella Di Dio","Sabrina Morales","María Florencia Defeo","Soledad Pedernera","Darío Ganduglia"],
+    cats: ["Niñeces y Legislación","Niñeces","Niñeces y Adolescencias"]
+  },
+  "Turismo": {
+    nombre: "Turismo",
+    icono: "✈️",
+    miembros: ["Nicolás Morzone","Gustavo Staffolani","Juan Manuel Granillo Fernández","Pablo Poggio","Raúl Recavarren","Gastón Álvarez","María Florencia Barcia","María Ona Parrilli"],
+    cats: ["Turismo"]
+  },
+  "Salud": {
+    nombre: "Salud y Medicina Social",
+    icono: "⚕️",
+    miembros: ["Micaela Maggio","Iván Zanetto","Romina Santana","Pablo Poggio","Gisella Di Dio","Sabrina Morales","María Florencia Barcia","Darío Ganduglia"],
+    cats: ["Salud"]
+  },
+  "Género": {
+    nombre: "Equidad y Género",
+    icono: "⚖️",
+    miembros: ["Gisella Di Dio","María Florencia Defeo","Soledad Pedernera","Josefina Bolis","Romina Santana","Sol Maluendez","María Florencia Barcia","Melany Horomadiuk"],
+    cats: ["Género y Legislación","Género","Equidad y Género"]
+  }
+};
+
+function getProyectosComision(key){
+  const com = COMISIONES[key];
+  if(!com) return [];
+  return allProyectos().filter(p => {
+    const pcat = (p.cat||'').toLowerCase().trim();
+    // Exact match first
+    if(com.cats.some(cat => cat.toLowerCase().trim() === pcat)) return true;
+    // For combined categories like "Seguridad y Ambiente", "Transporte y Hacienda":
+    // split by " y " and check if ANY part matches one of this comision's cats
+    const parts = pcat.split(' y ').map(s=>s.trim());
+    if(parts.length > 1){
+      return parts.some(part => com.cats.some(cat => cat.toLowerCase().trim() === part));
+    }
+    return false;
+  });
+}
+
+function getLLAMiembros(key){
+  const com = COMISIONES[key];
+  if(!com) return [];
+  const llaNames = Object.keys(DATA);
+  return com.miembros.filter(m => llaNames.some(n => 
+    n.toLowerCase().includes(m.split(' ').slice(-1)[0].toLowerCase())
+  ));
+}
+
+
+/* ===== COMISIONES RENDER ===== */
+let currentComision = null;
+let comisionFilter = 'todos';
+
+function showCom(id){
+  ['view-comisiones-list','view-comision-detalle'].forEach(v=>document.getElementById(v).style.display='none');
+  document.getElementById(id).style.display='block';
+}
+
+function renderComisiones(){
+  showCom('view-comisiones-list');
+  const all = allProyectos();
+  const totalApros = all.filter(p=>getStatus(p)==='aprobado').length;
+  const totalAlertas = all.filter(p=>getStatus(p)!=='aprobado'&&getStatus(p)!=='rechazado'&&diasDesde(alertDates[p.num]||p.fecha)>=60).length;
+
+  document.getElementById('stats-comisiones').innerHTML=`
+    <div class="stat-card"><div class="stat-num">${Object.keys(COMISIONES).length}</div><div class="stat-lbl">Comisiones</div></div>
+    <div class="stat-card"><div class="stat-num">${all.length}</div><div class="stat-lbl">Total proyectos</div></div>
+    <div class="stat-card"><div class="stat-num green">${totalApros}</div><div class="stat-lbl">Aprobados</div></div>
+    <div class="stat-card"><div class="stat-num red">${totalAlertas}</div><div class="stat-lbl">⚠ Alertas 60d</div></div>
+  `;
+
+  const grid = document.getElementById('comisiones-grid');
+  grid.innerHTML = '';
+  Object.entries(COMISIONES).forEach(([key, com])=>{
+    const proyectos = getProyectosComision(key);
+    const apros = proyectos.filter(p=>getStatus(p)==='aprobado').length;
+    const alertas = proyectos.filter(p=>getStatus(p)!=='aprobado'&&getStatus(p)!=='rechazado'&&diasDesde(alertDates[p.num]||p.fecha)>=60).length;
+    const llaMiembros = getLLAMiembros(key);
+    const div = document.createElement('div');
+    div.className = 'cat-card';
+    div.style.cssText = 'cursor:pointer';
+    div.innerHTML = `
+      <div class="cat-icon">${com.icono}</div>
+      <div class="cat-name" style="font-size:13px;line-height:1.3">${com.nombre}</div>
+      <div style="margin-top:6px;font-size:11px;color:#888">${proyectos.length} proyectos · <span style="color:#3B6D11;font-weight:600">${apros} aprobados</span>${alertas>0?` · <span style="color:#A32D2D;font-weight:700">⚠${alertas}</span>`:''}</div>
+      ${llaMiembros.length>0?`<div style="margin-top:8px;font-size:10px;color:#6B21A8;font-weight:600">LLA: ${llaMiembros.join(', ')}</div>`:''}
+      <div class="cat-bar" style="margin-top:8px"><div class="cat-bar-fill" style="width:${proyectos.length>0?Math.min(100,Math.round(apros/proyectos.length*100)):0}%"></div></div>
+    `;
+    div.onclick = ()=>openComision(key);
+    grid.appendChild(div);
+  });
+}
+
+function openComision(key){
+  currentComision = key;
+  comisionFilter = 'todos';
+  showCom('view-comision-detalle');
+  const com = COMISIONES[key];
+  document.getElementById('bc-comision-nombre').textContent = com.nombre;
+  document.getElementById('com-det-icon').textContent = com.icono;
+  document.getElementById('com-det-name').textContent = com.nombre;
+  const proyectos = getProyectosComision(key);
+  document.getElementById('com-det-sub').textContent = `${proyectos.length} proyectos · ${com.miembros.length} miembros`;
+
+  // Inject members section
+  const detHeader = document.getElementById('com-det-name').parentElement;
+  let membersDiv = document.getElementById('com-members');
+  if(!membersDiv){ membersDiv = document.createElement('div'); membersDiv.id='com-members'; detHeader.parentElement.after(membersDiv); }
+  
+  const llaSet = new Set(Object.keys(DATA).map(n=>n.toLowerCase()));
+  const membersHTML = com.miembros.map(m=>{
+    const isLLA = llaSet.has(m.toLowerCase()) || Object.keys(DATA).some(n=>n.toLowerCase().includes(m.split(' ').slice(-1)[0].toLowerCase()));
+    return `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:4px 10px;border-radius:20px;margin:3px;background:${isLLA?'#EEEDFE':'#f0edf5'};color:${isLLA?'#3C3489':'#555'};border:${isLLA?'1px solid #534AB7':'0.5px solid #e0dce8'}">${isLLA?'<b>LLA</b> ':''}${m}</span>`;
+  }).join('');
+  
+  membersDiv.style.cssText = 'background:white;border:0.5px solid #e0dce8;border-radius:14px;padding:16px 20px;margin-bottom:16px';
+  membersDiv.innerHTML = `
+    <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">Miembros de la comisión</div>
+    <div>${membersHTML}</div>
+  `;
+
+  renderComisionFilterRow(proyectos);
+  renderComisionList(proyectos);
+}
+
+function backToComisiones(){
+  const old = document.getElementById('com-members');
+  if(old) old.remove();
+  renderComisiones();
+}
+
+function renderComisionFilterRow(proyectos){
+  const estados=['todos',...new Set(proyectos.map(p=>getStatus(p)))];
+  document.getElementById('com-filter-row').innerHTML = estados.map(e=>
+    `<button class="filter-btn ${comisionFilter===e?'active':''}" onclick="setComisionFilter('${e}')">${e==='todos'?'Todos':getStatusLabel(e)}</button>`
+  ).join('');
+}
+
+function setComisionFilter(f){
+  comisionFilter = f;
+  const proyectos = getProyectosComision(currentComision);
+  renderComisionFilterRow(proyectos);
+  renderComisionList(proyectos);
+}
+
+function renderComisionList(allFiltered){
+  const list = document.getElementById('com-proj-list');
+  const items = comisionFilter==='todos' ? allFiltered : allFiltered.filter(p=>getStatus(p)===comisionFilter);
+  if(!items.length){list.innerHTML='<div class="no-data">No hay proyectos en esta comisión.</div>';return;}
+  list.innerHTML = items.map(p=>{
+    const s=getStatus(p), dias=diasDesde(alertDates[p.num]||p.fecha);
+    const isAlert=s!=='aprobado'&&s!=='rechazado'&&dias>=60;
+    const tipoCls=TIPO_CLS[p.tipo]||'tipo-res';
+    const opts=ESTADOS.map(e=>`<option value="${e.v}"${s===e.v?' selected':''}>${e.l}</option>`).join('');
+    const hasNote=alertNotes[p.num];
+    const curDate=alertDates[p.num]||p.fecha||'';
+    return `<div class="proj-item${isAlert?' alert-active':''}" id="cpi-${p.num}">
+      <div class="proj-top">
+        <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+          <span class="proj-num">Exp. ${p.num}</span>
+          <span class="proj-tipo ${tipoCls}">${p.tipo}</span>
+          <span style="font-size:11px;color:#6B21A8;background:#EEEDFE;padding:2px 8px;border-radius:5px;font-weight:500">${p.consejal}</span>
+        </div>
+        <select class="status-select" onchange="changeStatusCom('${p.num}',this.value,'${p.consejal}')">${opts}</select>
+      </div>
+      <div class="proj-title">${p.tema}</div>
+      <div class="proj-footer">
+        <span class="pill ${CAT_STYLES[p.cat]||'p-obras'}">${p.cat}</span>
+        ${getDaysBadge(dias,s)}
+        <button class="note-btn${hasNote?' on':''}" onclick="toggleNote('${p.num}')">${hasNote?'⚑ Con nota':'+ Nota'}</button>
+      </div>
+      <div class="note-expand${hasNote?' open':''}" id="ae-${p.num}">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+          <span style="font-size:11px;color:#888">Fecha presentación a sesión:</span>
+          <input type="date" class="date-input" id="date-${p.num}" value="${curDate}">
+        </div>
+        <textarea class="note-textarea" id="note-${p.num}" placeholder="Nota de seguimiento...">${alertNotes[p.num]||''}</textarea>
+        <div style="display:flex;justify-content:flex-end"><button class="save-btn" onclick="saveNoteFromCom('${p.num}')">Guardar</button></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function changeStatusCom(num,val,consejal){
+  const now=new Date();
+  activityLog.push({num,consejal,anterior:statuses[num]||'pendiente',nuevo:val,hora:now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0')});
+  statuses[num]=val;
+  saveLocal();
+  const proyectos=getProyectosComision(currentComision);
+  renderComisionFilterRow(proyectos);
+  renderComisionList(proyectos);
+  updateBanner();
+}
+
+function saveNoteFromCom(num){
+  const n=document.getElementById('note-'+num);
+  const d=document.getElementById('date-'+num);
+  if(n&&n.value.trim()) alertNotes[num]=n.value.trim(); else delete alertNotes[num];
+  if(d&&d.value){alertDates[num]=d.value; const p=allProyectos().find(p=>p.num===num); if(p) p.fecha=d.value;}
+  saveLocal();
+  const proyectos=getProyectosComision(currentComision);
+  renderComisionList(proyectos);
+  updateBanner();
+}
+
+
+function runAudit(){
+  const all = allProyectos();
+  // Build set of all mapped cats
+  const allMappedCats = new Set();
+  Object.values(COMISIONES).forEach(com => com.cats.forEach(cat => allMappedCats.add(cat.toLowerCase().trim())));
+  
+  // Find unmapped
+  const unmapped = [];
+  const catsSeen = new Set();
+  all.forEach(p=>{
+    const pcat = (p.cat||'').trim();
+    if(!pcat || pcat==='' || pcat==='Se Trata') return; // Se Trata is intentionally unassigned
+    if(!allMappedCats.has(pcat.toLowerCase().trim())){
+      if(!catsSeen.has(pcat)){
+        catsSeen.add(pcat);
+        const count = all.filter(x=>(x.cat||'').trim()===pcat).length;
+        unmapped.push({cat:pcat, count});
+      }
+    }
+  });
+
+  // Find cats in multiple comisions
+  const catToComisions = {};
+  Object.entries(COMISIONES).forEach(([key,com])=>{
+    com.cats.forEach(cat=>{
+      const k = cat.toLowerCase().trim();
+      if(!catToComisions[k]) catToComisions[k]=[];
+      catToComisions[k].push(com.nombre);
+    });
+  });
+  const duplicates = Object.entries(catToComisions).filter(([,v])=>v.length>1);
+
+  // Build report
+  const panel = document.getElementById('audit-panel');
+  const content = document.getElementById('audit-content');
+  panel.style.display = 'block';
+
+  let html = '';
+  if(unmapped.length===0 && duplicates.length===0){
+    html = '<div style="color:#3B6D11;font-size:13px;font-weight:600">✅ Todo OK — todas las categorías están mapeadas correctamente a una comisión.</div>';
+  } else {
+    if(unmapped.length>0){
+      html += '<div style="font-size:12px;font-weight:600;color:#A32D2D;margin-bottom:8px">⚠ Categorías sin comisión asignada:</div>';
+      html += unmapped.map(u=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid #f0edf5;font-size:12px">
+        <span style="background:#FCEBEB;color:#A32D2D;padding:2px 8px;border-radius:8px;font-weight:600">${u.cat}</span>
+        <span style="color:#888">${u.count} proyecto${u.count!==1?'s':''} sin comisión</span>
+      </div>`).join('');
+    }
+    if(duplicates.length>0){
+      html += '<div style="font-size:12px;font-weight:600;color:#854F0B;margin-top:12px;margin-bottom:8px">⚠ Categorías asignadas a más de una comisión:</div>';
+      html += duplicates.map(([cat,coms])=>`<div style="padding:6px 0;border-bottom:0.5px solid #f0edf5;font-size:12px">
+        <span style="background:#FAEEDA;color:#854F0B;padding:2px 8px;border-radius:8px;font-weight:600">${cat}</span>
+        <span style="color:#888;margin-left:6px">→ ${coms.join(' y ')}</span>
+      </div>`).join('');
+    }
+  }
+  
+  // Also show full category map
+  html += '<div style="font-size:12px;font-weight:600;color:#555;margin-top:16px;margin-bottom:8px">📋 Mapa completo de categorías:</div>';
+  const allCats = [...new Set(all.map(p=>(p.cat||'').trim()).filter(Boolean))].sort();
+  html += allCats.map(cat=>{
+    if(cat==='Se Trata') return `<div style="font-size:11px;padding:4px 0;color:#aaa">• <b>${cat}</b> — sin comisión (aprobados en sesión)</div>`;
+    const coms = Object.entries(COMISIONES).filter(([,com])=>com.cats.some(c=>c.toLowerCase().trim()===cat.toLowerCase().trim())).map(([,com])=>com.nombre);
+    const color = coms.length===0?'#A32D2D':coms.length>1?'#854F0B':'#3B6D11';
+    return `<div style="font-size:11px;padding:4px 0;border-bottom:0.5px solid #f5f4f7">• <b>${cat}</b> <span style="color:${color}">${coms.length===0?'❌ Sin comisión':coms.length>1?'⚠ '+coms.join(' + '):'✓ '+coms[0]}</span></div>`;
+  }).join('');
+
+  content.innerHTML = html;
+}
+
+// ===== INIT =====
+// Version bump: clear old localStorage to force fresh sync
+const CACHE_VER = 'v4';
+if(localStorage.getItem('lla_cache_ver') !== CACHE_VER){
+  localStorage.removeItem('lla_data_v1');
+  localStorage.removeItem('lla_statuses_v1');
+  localStorage.removeItem('lla_notes_v1');
+  localStorage.removeItem('lla_dates_v1');
+  localStorage.removeItem('lla_last_sync_v1');
+  localStorage.setItem('lla_cache_ver', CACHE_VER);
+}
+loadLocal();
+renderDashboard();
+// Auto-sync on load
+syncFromSheets(true);
+document.addEventListener('DOMContentLoaded',()=>{
+  const lbl=document.getElementById('sync-label');
+  if(lbl) lbl.textContent=lastSyncLabel();
+});
+</script>
+</body>
+</html>
